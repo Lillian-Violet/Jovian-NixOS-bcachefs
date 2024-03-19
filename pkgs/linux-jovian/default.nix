@@ -22,6 +22,7 @@ in
       extraMeta.branch = versions.majorMinor version;
 
       kernelPatches =
+        lib.mkForce
         (args.kernelPatches or [])
         ++ [
           {
