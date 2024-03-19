@@ -1,7 +1,11 @@
-{ lib, fetchFromGitHub, fetchpatch, buildLinux, ... } @ args:
+{ lib, fetchFromGitHub, fetchpatch, buildLinux, kernel, ... } @ args:
 
 let
   inherit (lib) versions;
+
+  commitDate = "2023-02-01";
+  currentCommit = "65960c284ad149cc4bfbd64f21e6889c1e3d1c5f";
+  diffHash = "sha256-4wpY3aYZ93OXSU4wmQs9K62nPyIzjKu4RBQTwksmyyk=";
 
   kernelVersion = "6.1.52";
   vendorVersion = "valve19";
@@ -12,7 +16,29 @@ buildLinux (args // rec {
   # branchVersion needs to be x.y
   extraMeta.branch = versions.majorMinor version;
 
+  (kernel.override ( args // {
+  argsOverride = {
+    version = "${kernel.version}-bcachefs-unstable-${commitDate}";
+
+    extraMeta = {
+      branch = "master";
+      maintainers = with lib.maintainers; [ davidak Madouura ];
+    };
+  } // argsOverride;
+
   kernelPatches = (args.kernelPatches or []) ++ [
+    {
+      name = "bcachefs-${currentCommit}";
+
+      patch = fetchpatch {
+        name = "bcachefs-${currentCommit}.diff";
+        url = "https://evilpiepirate.org/git/bcachefs.git/rawdiff/?id=${currentCommit}&id2=v${lib.versions.majorMinor kernelVersion}";
+        sha256 = diffHash;
+      };
+
+      extraConfig = "BCACHEFS_FS m";
+    }
+
     {
       # Enable all Bluetooth LE PHYs by default
       # See comment in https://github.com/Jovian-Experiments/PKGBUILDs-mirror/blob/d594fbf6bea8f0bace6dafca1799632579cd772b/PKGBUILD
