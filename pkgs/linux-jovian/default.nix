@@ -3,7 +3,6 @@
   fetchFromGitHub,
   fetchpatch,
   buildLinux,
-  kernel,
   ...
 } @ args: let
   inherit (lib) versions;
